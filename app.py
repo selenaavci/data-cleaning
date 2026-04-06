@@ -43,9 +43,9 @@ with st.sidebar:
                 st.session_state.cleaned = False
                 st.session_state._file_name = uploaded.name
 
-            st.success(f"**{uploaded.name}** yuklendi - {len(df)} satir, {len(df.columns)} kolon")
+            st.success(f"**{uploaded.name}** yüklendi - {len(df)} satır, {len(df.columns)} kolon")
         except Exception as e:
-            st.error(f"Dosya okunamadi: {e}")
+            st.error(f"Dosya okunamadı: {e}")
             st.stop()
     else:
         st.info("Başlamak için bir dosya yükleyin.")
@@ -67,8 +67,8 @@ with tab_info:
             "Kolon": col,
             "Tip": str(engine.df[col].dtype),
             "Dolu": int(engine.df[col].notna().sum()),
-            "Bos": int(engine.df[col].isnull().sum()),
-            "Bos %": round(engine.df[col].isnull().sum() / len(engine.df) * 100, 1),
+            "Boş": int(engine.df[col].isnull().sum()),
+            "Boş %": round(engine.df[col].isnull().sum() / len(engine.df) * 100, 1),
             "Benzersiz": int(engine.df[col].nunique()),
         })
     st.dataframe(pd.DataFrame(info_data), use_container_width=True, hide_index=True)
@@ -97,7 +97,7 @@ else:
                 st.write(f"- **{col}**: {info['count']} eksik ({info['pct']}%)")
 
     if "duplicates" in issues:
-        with st.expander(f"Tekrar Eden Satırlar - {issues['duplicates']} satir"):
+        with st.expander(f"Tekrar Eden Satırlar - {issues['duplicates']} satır"):
             st.write(f"Toplam **{issues['duplicates']}** tam tekrar eden satır bulundu.")
 
     if "type_issues" in issues:
