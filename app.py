@@ -83,7 +83,7 @@ else:
     cols = st.columns(4)
     with cols[0]:
         missing_count = len(issues.get("missing_values", {}))
-        st.metric("Eksik Degerli Kolon", missing_count)
+        st.metric("Eksik Değerli Kolon", missing_count)
     with cols[1]:
         st.metric("Tekrar Eden Satır", issues.get("duplicates", 0))
     with cols[2]:
@@ -103,7 +103,7 @@ else:
     if "type_issues" in issues:
         with st.expander(f"Tip Uyumsuzlukları - {len(issues['type_issues'])} kolon"):
             for col, kind in issues["type_issues"].items():
-                label = "Metin olarak saklanan sayısal deger" if kind == "numeric_as_text" else "Metin olarak saklanan tarih"
+                label = "Metin olarak saklanan sayısal değer" if kind == "numeric_as_text" else "Metin olarak saklanan tarih"
                 st.write(f"- **{col}**: {label}")
 
     if "text_issues" in issues:
@@ -154,7 +154,7 @@ with st.expander("Eksik Değer Yönetimi", expanded=True):
                 if is_numeric:
                     strategy = st.selectbox(
                         f"{col} stratejisi",
-                        ["atla", "ortalama", "medyan", "sıfır", "satırları_sil"],
+                        ["atla", "ortalama", "medyan", "sifir", "satirlari_sil"],
                         key=f"missing_{col}",
                         label_visibility="collapsed",
                         format_func=lambda x: {
@@ -168,7 +168,7 @@ with st.expander("Eksik Değer Yönetimi", expanded=True):
                 else:
                     strategy = st.selectbox(
                         f"{col} stratejisi",
-                        ["atla", "mod", "yer_tutucu", "satırları_sil"],
+                        ["atla", "mod", "yer_tutucu", "satirlari_sil"],
                         key=f"missing_{col}",
                         label_visibility="collapsed",
                         format_func=lambda x: {
