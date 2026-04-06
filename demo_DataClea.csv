@@ -1,0 +1,36 @@
+musteri_id,ad_soyad,email,telefon,sehir,yas,maas,kayit_tarihi,aktif_mi,urun_puani,notlar
+1001,  Ahmet Yilmaz ,ahmet@example.com,05321234567,Istanbul,32,8500.00,2023-01-15,Evet,4.5,Duzenlil musteri
+1002,Elif  Kara,elif.kara@example.com,05339876543,Ankara,28,7200.50,15/02/2023,Hayir,3.8,
+1003,Mehmet Demir,mehmet@example.com,N/A,  izmir  ,45,12000.00,2023-03-20,Evet,4.9,VIP musteri
+1004,Zeynep Ozturk,zeynep@example.com,05301112233,Istanbul,null,9500.00,2023/04/10,Evet,4.2,
+1005,Ahmet Yilmaz,ahmet@example.com,05321234567,Istanbul,28,7200.50,15/02/2023,Hayir,3.8,
+1006,Ali  Celik,ali.celik@example.com,unknown,ANKARA,-,6800.00,01-05-2023,Hayir,3.5,Yeni musteri
+1007,Fatma Sahin,fatma@example.com,05367778899,  Izmir,29,7800.00,2023-06-01,evet,?,Aktif
+1008,Burak Yildiz,burak@example.com,05344445566,Bursa,35,95000.00,2023-07-15,Hayir,4.0,
+1009,  Selin Arslan  ,selin@example.com,-,Antalya,27,,20/08/2023,Evet,4.6,
+1010,Cem Aydin,cem@example.com,05312223344,Istanbul,42,11500.00,2023-09-10,Hayir,3.9,Kurumsal
+1011,Derya Korkmaz,,05398887766,Ankara,,8200.00,2023-10-05,evet,N/A,
+1012,Emre  Polat,emre@example.com,05356667788,izmir,38,9000.00,N/A,Hayir,4.1,Duzenli musteri
+1013,Gul Erdogan,gul@example.com,05321122334,Istanbul,31,7500.00,2023-12-01,Evet,4.4,
+1014,Hakan Dogan,hakan@example.com,null,  BURSA  ,N/A,10200.00,15/01/2024,Hayir,3.7,
+1015,Irem Cetin,irem@example.com,05345556677,Antalya,26,6500.00,2024-02-20,evet,4.8,Yeni musteri
+1016,Kemal Ozcan,kemal@example.com,05378889900,Istanbul,55,15000.00,2024-03-10,Evet,2.1,VIP musteri
+1017,Leyla  Aksoy,n/a,05311234567,Ankara,33,,01/04/2024,Hayir,4.3,
+1018,Murat Yalcin,murat@example.com,05349876543,Izmir,40,10800.00,2024-05-15,Evet,4.0,Kurumsal
+1019,Nese Demirci,nese@example.com,--,istanbul,?,8900.00,2024-06-20,Hayir,3.6,
+1020,Onur Koc,onur@example.com,05367654321,Bursa,36,9200.00,2024-07-01,evet,4.7,
+1021,Pinar Erdogan,pinar@example.com,05321234567,Istanbul,29,7100.00,2024-08-10,Evet,4.2,
+1010,Cem Aydin,cem@example.com,05312223344,Istanbul,42,11500.00,2023-09-10,Hayir,3.9,Kurumsal
+1023,Riza Sahin,riza@example.com,?,  Antalya,48,13500.00,15/09/2024,Evet,-,
+1024,Sevgi Yildirim,sevgi@example.com,05345678901,ANKARA,unknown,8000.00,2024-10-01,Hayir,4.5,Duzenli musteri
+1025,Tolga Acar,tolga@example.com,05378901234,Izmir,34,88000.00,2024-11-15,Evet,3.8,
+1026,  Umut  Kaya  ,umut@example.com,N/A,istanbul,30,7600.00,01/12/2024,evet,4.1,Yeni musteri
+1027,Vildan Demirel,vildan@example.com,05321112233,Bursa,,9800.00,N/A,Hayir,4.4,
+1028,Yusuf Erdem,yusuf@example.com,05349998877,Antalya,39,10500.00,2025-01-20,Evet,null,Aktif
+1029,Zehra Kaplan,zehra@example.com,null,Istanbul,44,105000.00,2025-02-15,Hayir,3.2,VIP musteri
+1013,Gul Erdogan,gul@example.com,05321122334,Istanbul,31,7500.00,2023-12-01,Evet,4.4,
+1031,Baris Ozdemir,baris@example.com,05367890123,  IZMIR  ,N/A,7400.00,15/03/2025,evet,4.6,
+1032,Canan Polat,canan@example.com,-,Ankara,37,,2025-04-01,Hayir,3.9,Kurumsal
+1033,Deniz Aksoy,deniz@example.com,05312345678,Istanbul,25,6200.00,2025-05-10,Evet,4.8,Yeni musteri
+1034,Erkan Yilmaz,erkan@example.com,unknown,Bursa,51,14200.00,01/06/2025,Hayir,2.5,
+1035,Filiz Dogan,filiz@example.com,05349871234,Antalya,33,8800.00,N/A,evet,4.3,Aktif
