@@ -10,7 +10,7 @@ class CleaningAction:
     issue_type: str
     action: str
     affected_rows: int
-    status: str = "Uygulandi"
+    status: str = "Uygulandı"
 
 
 class CleaningEngine:
@@ -118,8 +118,8 @@ class CleaningEngine:
         action_map = {
             "mean": "Ortalama ile dolduruldu",
             "median": "Medyan ile dolduruldu",
-            "zero": "Sifir ile dolduruldu",
-            "drop_rows": "Satirlar silindi",
+            "zero": "Sıfır ile dolduruldu",
+            "drop_rows": "Satırlar silindi",
         }
 
         if strategy == "mean":
@@ -133,7 +133,7 @@ class CleaningEngine:
         elif strategy == "drop_rows":
             self.df = self.df.dropna(subset=[col]).reset_index(drop=True)
 
-        self.log.append(CleaningAction(col, "Eksik Deger", action_map.get(strategy, strategy), missing_count))
+        self.log.append(CleaningAction(col, "Eksik Değer", action_map.get(strategy, strategy), missing_count))
 
     def handle_missing_categorical(self, col: str, strategy: str, placeholder: str = "Bilinmiyor") -> None:
         """Kategorik kolondaki eksik degerleri doldur."""
@@ -147,24 +147,24 @@ class CleaningEngine:
             mode_val = self.df[col].mode()
             if not mode_val.empty:
                 self.df[col] = self.df[col].fillna(mode_val.iloc[0])
-            action_desc = "En sik deger ile dolduruldu"
+            action_desc = "En sık değer ile dolduruldu"
         elif strategy == "placeholder":
             self.df[col] = self.df[col].fillna(placeholder)
             action_desc = f"'{placeholder}' ile dolduruldu"
         elif strategy == "drop_rows":
             self.df = self.df.dropna(subset=[col]).reset_index(drop=True)
-            action_desc = "Satirlar silindi"
+            action_desc = "Satırlar silindi"
         else:
             action_desc = strategy
 
-        self.log.append(CleaningAction(col, "Eksik Deger", action_desc, missing_count))
+        self.log.append(CleaningAction(col, "Eksik Değer", action_desc, missing_count))
 
     def remove_duplicates(self) -> int:
         """Tekrar eden satirlari kaldir."""
         dup_count = int(self.df.duplicated().sum())
         if dup_count > 0:
             self.df = self.df.drop_duplicates().reset_index(drop=True)
-            self.log.append(CleaningAction("Tumu", "Tekrar Eden Satir", "Tekrar eden satirlar kaldirildi", dup_count))
+            self.log.append(CleaningAction("Tümü", "Tekrar Eden Satır", "Tekrar eden satırlar kaldırıldı", dup_count))
         return dup_count
 
     def convert_to_numeric(self, col: str) -> None:
@@ -174,7 +174,7 @@ class CleaningEngine:
         before = self.df[col].copy()
         self.df[col] = pd.to_numeric(self.df[col], errors="coerce")
         changed = int((before.astype(str) != self.df[col].astype(str)).sum())
-        self.log.append(CleaningAction(col, "Tip Donusumu", "Sayisala donusturuldu", changed))
+        self.log.append(CleaningAction(col, "Tip Dönüşümü", "Sayısala dönüşütürüldü", changed))
 
     def convert_to_datetime(self, col: str) -> None:
         """Metin kolonunu tarihe donustur."""
@@ -184,7 +184,7 @@ class CleaningEngine:
         self.df[col] = pd.to_datetime(self.df[col], errors="coerce", dayfirst=True)
         after_null = int(self.df[col].isnull().sum())
         converted = len(self.df) - after_null
-        self.log.append(CleaningAction(col, "Tip Donusumu", "Tarihe donusturuldu", converted))
+        self.log.append(CleaningAction(col, "Tip Dönüşümü", "Tarihe dönüştürüldü", converted))
 
     def normalize_boolean(self, col: str) -> None:
         """Boolean benzeri degerleri (Evet/Hayir, True/False, 1/0) True/False'a normalize et."""
@@ -200,7 +200,7 @@ class CleaningEngine:
         original = self.df[col].copy()
         self.df[col] = self.df[col].astype(str).str.strip().str.lower().map(mapping)
         changed = int((original.astype(str) != self.df[col].astype(str)).sum())
-        self.log.append(CleaningAction(col, "Tip Donusumu", "Boolean'a normalize edildi", changed))
+        self.log.append(CleaningAction(col, "Tip Dönüşümü", "Boolean'a normalize edildi", changed))
 
     def trim_whitespace(self, col: str) -> None:
         """Bastaki ve sondaki bosluklari kirp."""
@@ -211,7 +211,7 @@ class CleaningEngine:
         self.df.loc[series.isna(), col] = np.nan
         changed = int((series.fillna("") != self.df[col].fillna("")).sum())
         if changed > 0:
-            self.log.append(CleaningAction(col, "Metin Temizleme", "Bosluklar kirpildi", changed))
+            self.log.append(CleaningAction(col, "Metin Temizleme", "Boşluklar kırpıldı", changed))
 
     def remove_extra_spaces(self, col: str) -> None:
         """Birden fazla bosluklari teke indir."""
@@ -222,14 +222,14 @@ class CleaningEngine:
         self.df.loc[series.isna(), col] = np.nan
         changed = int((series.fillna("") != self.df[col].fillna("")).sum())
         if changed > 0:
-            self.log.append(CleaningAction(col, "Metin Temizleme", "Fazla bosluklar silindi", changed))
+            self.log.append(CleaningAction(col, "Metin Temizleme", "Fazla boşluklar silindi", changed))
 
     def change_case(self, col: str, case: str) -> None:
         """Metin harflerini degistir: 'lower', 'upper', 'title'."""
         if col not in self.df.columns:
             return
         series = self.df[col].copy()
-        case_labels = {"lower": "Kucuk harfe cevirildi", "upper": "Buyuk harfe cevirildi", "title": "Baslik formatina cevirildi"}
+        case_labels = {"lower": "Küçük harfe çevirildi", "upper": "Büyük harfe çevirildi", "title": "Başlık formatına çevirildi"}
         if case == "lower":
             self.df[col] = self.df[col].astype(str).str.lower()
         elif case == "upper":
@@ -250,7 +250,7 @@ class CleaningEngine:
         self.df.loc[series.isna(), col] = np.nan
         changed = int((series.fillna("") != self.df[col].fillna("")).sum())
         if changed > 0:
-            self.log.append(CleaningAction(col, "Metin Temizleme", "Noktalama isaretleri silindi", changed))
+            self.log.append(CleaningAction(col, "Metin Temizleme", "Noktalama işaretleri silindi", changed))
 
     def replace_placeholders(self, col: str) -> None:
         """Yaygin yer tutucu degerleri NaN ile degistir."""
@@ -263,7 +263,7 @@ class CleaningEngine:
         count = int(mask.sum())
         if count > 0:
             self.df.loc[mask, col] = np.nan
-            self.log.append(CleaningAction(col, "Gecersiz Deger", "Yer tutucular NaN ile degistirildi", count))
+            self.log.append(CleaningAction(col, "Geçersiz Değer", "Yer tutucular NaN ile değiştirildi", count))
 
     def cap_outliers(self, col: str, method: str = "iqr") -> None:
         """IQR veya winsorlama yontemiyle aykiri degerleri sinirla."""
@@ -287,8 +287,8 @@ class CleaningEngine:
         count = int(outlier_mask.sum())
         if count > 0:
             self.df[col] = self.df[col].clip(lower=lower, upper=upper)
-            method_label = "IQR sinirlama" if method == "iqr" else "Winsorlama"
-            self.log.append(CleaningAction(col, "Aykiri Deger", method_label, count))
+            method_label = "IQR sınırlama" if method == "iqr" else "Winsorlama"
+            self.log.append(CleaningAction(col, "Aykırı Değer", method_label, count))
 
     def drop_high_missing_columns(self, threshold: float = 0.8) -> None:
         """Eksiklik orani esigi asan kolonlari sil."""
@@ -296,20 +296,20 @@ class CleaningEngine:
             ratio = self.df[col].isnull().sum() / len(self.df)
             if ratio >= threshold:
                 self.df = self.df.drop(columns=[col])
-                self.log.append(CleaningAction(col, "Yuksek Eksiklik Orani", f"Kolon silindi (>{threshold*100:.0f}% eksik)", len(self.df)))
+                self.log.append(CleaningAction(col, "Yüksek Eksiklik Oranı", f"Kolon silindi (>{threshold*100:.0f}% eksik)", len(self.df)))
 
     # ── Ozet ve Disari Aktarma ───────────────────────────────────────
 
     def get_summary_df(self) -> pd.DataFrame:
         """Temizleme logunu DataFrame olarak dondur."""
         if not self.log:
-            return pd.DataFrame(columns=["Kolon", "Sorun Tipi", "Uygulanan Islem", "Etkilenen Satir", "Durum"])
+            return pd.DataFrame(columns=["Kolon", "Sorun Tipi", "Uygulanan İşlem", "Etkilenen Satır", "Durum"])
         return pd.DataFrame([
             {
                 "Kolon": a.column,
                 "Sorun Tipi": a.issue_type,
-                "Uygulanan Islem": a.action,
-                "Etkilenen Satir": a.affected_rows,
+                "Uygulanan İşlem": a.action,
+                "Etkilenen Satır": a.affected_rows,
                 "Durum": a.status,
             }
             for a in self.log
