@@ -4,7 +4,7 @@ import numpy as np
 import io
 from cleaning import CleaningEngine
 
-st.set_page_config(page_title="Data Cleaning Agent", layout="wide")
+st.set_page_config(page_title="Data Cleaning Agent", icon= "🧹", layout="wide")
 
 # ── Custom CSS ───────────────────────────────────────────────────────
 st.markdown("""
