@@ -10,11 +10,11 @@ class CleaningAction:
     issue_type: str
     action: str
     affected_rows: int
-    status: str = "Applied"
+    status: str = "Uygulandi"
 
 
 class CleaningEngine:
-    """Core engine that performs all data cleaning operations."""
+    """Tum veri temizleme islemlerini gerceklestiren cekirdek motor."""
 
     def __init__(self, df: pd.DataFrame):
         self.original_df = df.copy()
@@ -22,13 +22,13 @@ class CleaningEngine:
         self.log: list[CleaningAction] = []
         self.original_row_count = len(df)
 
-    # ── Detection / Analysis ─────────────────────────────────────────
+    # ── Tespit / Analiz ──────────────────────────────────────────────
 
     def detect_issues(self) -> dict[str, Any]:
-        """Scan the dataframe and return a summary of detected issues."""
+        """Veri setini tarayip tespit edilen sorunlarin ozetini dondurur."""
         issues: dict[str, Any] = {}
 
-        # Missing values
+        # Eksik degerler
         missing = self.df.isnull().sum()
         missing = missing[missing > 0]
         if not missing.empty:
@@ -37,12 +37,12 @@ class CleaningEngine:
                 for col, cnt in missing.items()
             }
 
-        # Duplicates
+        # Tekrar eden satirlar
         dup_count = int(self.df.duplicated().sum())
         if dup_count > 0:
             issues["duplicates"] = dup_count
 
-        # Type issues – numeric-looking text columns
+        # Tip sorunlari - metin olarak saklanan sayisal/tarih kolonlari
         type_issues = {}
         for col in self.df.select_dtypes(include=["object"]).columns:
             numeric_count = pd.to_numeric(self.df[col], errors="coerce").notna().sum()
@@ -57,7 +57,7 @@ class CleaningEngine:
         if type_issues:
             issues["type_issues"] = type_issues
 
-        # Text issues – leading/trailing whitespace, extra spaces
+        # Metin sorunlari - bosluklar
         text_issues = {}
         for col in self.df.select_dtypes(include=["object"]).columns:
             series = self.df[col].dropna()
@@ -70,7 +70,7 @@ class CleaningEngine:
         if text_issues:
             issues["text_issues"] = text_issues
 
-        # Invalid / placeholder values
+        # Gecersiz / yer tutucu degerler
         placeholders = {"n/a", "na", "N/A", "NA", "-", "--", "null", "NULL",
                         "none", "None", "unknown", "Unknown", ".", "?", "undefined"}
         placeholder_issues = {}
@@ -82,7 +82,7 @@ class CleaningEngine:
         if placeholder_issues:
             issues["placeholder_values"] = placeholder_issues
 
-        # Outliers in numeric columns (IQR)
+        # Sayisal kolonlarda aykiri degerler (IQR)
         outlier_issues = {}
         for col in self.df.select_dtypes(include=["number"]).columns:
             series = self.df[col].dropna()
@@ -105,15 +105,22 @@ class CleaningEngine:
 
         return issues
 
-    # ── Cleaning Operations ──────────────────────────────────────────
+    # ── Temizleme Islemleri ──────────────────────────────────────────
 
     def handle_missing_numeric(self, col: str, strategy: str) -> None:
-        """Fill or drop missing values in a numeric column."""
+        """Sayisal kolondaki eksik degerleri doldur veya satirlari sil."""
         if col not in self.df.columns:
             return
         missing_count = int(self.df[col].isnull().sum())
         if missing_count == 0:
             return
+
+        action_map = {
+            "mean": "Ortalama ile dolduruldu",
+            "median": "Medyan ile dolduruldu",
+            "zero": "Sifir ile dolduruldu",
+            "drop_rows": "Satirlar silindi",
+        }
 
         if strategy == "mean":
             val = self.df[col].mean()
@@ -126,10 +133,10 @@ class CleaningEngine:
         elif strategy == "drop_rows":
             self.df = self.df.dropna(subset=[col]).reset_index(drop=True)
 
-        self.log.append(CleaningAction(col, "Missing Value", f"Filled with {strategy}" if strategy != "drop_rows" else "Dropped rows", missing_count))
+        self.log.append(CleaningAction(col, "Eksik Deger", action_map.get(strategy, strategy), missing_count))
 
-    def handle_missing_categorical(self, col: str, strategy: str, placeholder: str = "Unknown") -> None:
-        """Fill missing values in a categorical column."""
+    def handle_missing_categorical(self, col: str, strategy: str, placeholder: str = "Bilinmiyor") -> None:
+        """Kategorik kolondaki eksik degerleri doldur."""
         if col not in self.df.columns:
             return
         missing_count = int(self.df[col].isnull().sum())
@@ -140,45 +147,47 @@ class CleaningEngine:
             mode_val = self.df[col].mode()
             if not mode_val.empty:
                 self.df[col] = self.df[col].fillna(mode_val.iloc[0])
+            action_desc = "En sik deger ile dolduruldu"
         elif strategy == "placeholder":
             self.df[col] = self.df[col].fillna(placeholder)
+            action_desc = f"'{placeholder}' ile dolduruldu"
         elif strategy == "drop_rows":
             self.df = self.df.dropna(subset=[col]).reset_index(drop=True)
+            action_desc = "Satirlar silindi"
+        else:
+            action_desc = strategy
 
-        action_desc = f"Filled with {strategy}" if strategy != "drop_rows" else "Dropped rows"
-        if strategy == "placeholder":
-            action_desc = f"Filled with '{placeholder}'"
-        self.log.append(CleaningAction(col, "Missing Value", action_desc, missing_count))
+        self.log.append(CleaningAction(col, "Eksik Deger", action_desc, missing_count))
 
     def remove_duplicates(self) -> int:
-        """Remove duplicate rows. Returns number removed."""
+        """Tekrar eden satirlari kaldir."""
         dup_count = int(self.df.duplicated().sum())
         if dup_count > 0:
             self.df = self.df.drop_duplicates().reset_index(drop=True)
-            self.log.append(CleaningAction("All", "Duplicate Rows", "Removed duplicates", dup_count))
+            self.log.append(CleaningAction("Tumu", "Tekrar Eden Satir", "Tekrar eden satirlar kaldirildi", dup_count))
         return dup_count
 
     def convert_to_numeric(self, col: str) -> None:
-        """Convert a text column to numeric."""
+        """Metin kolonunu sayisala donustur."""
         if col not in self.df.columns:
             return
         before = self.df[col].copy()
         self.df[col] = pd.to_numeric(self.df[col], errors="coerce")
         changed = int((before.astype(str) != self.df[col].astype(str)).sum())
-        self.log.append(CleaningAction(col, "Type Conversion", "Converted to numeric", changed))
+        self.log.append(CleaningAction(col, "Tip Donusumu", "Sayisala donusturuldu", changed))
 
     def convert_to_datetime(self, col: str) -> None:
-        """Convert a text column to datetime."""
+        """Metin kolonunu tarihe donustur."""
         if col not in self.df.columns:
             return
         before_null = int(self.df[col].isnull().sum())
         self.df[col] = pd.to_datetime(self.df[col], errors="coerce", dayfirst=True)
         after_null = int(self.df[col].isnull().sum())
         converted = len(self.df) - after_null
-        self.log.append(CleaningAction(col, "Type Conversion", "Converted to datetime", converted))
+        self.log.append(CleaningAction(col, "Tip Donusumu", "Tarihe donusturuldu", converted))
 
     def normalize_boolean(self, col: str) -> None:
-        """Normalize boolean-like values (Yes/No, True/False, 1/0) to True/False."""
+        """Boolean benzeri degerleri (Evet/Hayir, True/False, 1/0) True/False'a normalize et."""
         if col not in self.df.columns:
             return
         mapping = {
@@ -191,22 +200,21 @@ class CleaningEngine:
         original = self.df[col].copy()
         self.df[col] = self.df[col].astype(str).str.strip().str.lower().map(mapping)
         changed = int((original.astype(str) != self.df[col].astype(str)).sum())
-        self.log.append(CleaningAction(col, "Type Conversion", "Normalized to boolean", changed))
+        self.log.append(CleaningAction(col, "Tip Donusumu", "Boolean'a normalize edildi", changed))
 
     def trim_whitespace(self, col: str) -> None:
-        """Trim leading/trailing whitespace."""
+        """Bastaki ve sondaki bosluklari kirp."""
         if col not in self.df.columns:
             return
         series = self.df[col].copy()
         self.df[col] = self.df[col].astype(str).str.strip()
-        # Restore NaN
         self.df.loc[series.isna(), col] = np.nan
         changed = int((series.fillna("") != self.df[col].fillna("")).sum())
         if changed > 0:
-            self.log.append(CleaningAction(col, "Text Cleaning", "Trimmed whitespace", changed))
+            self.log.append(CleaningAction(col, "Metin Temizleme", "Bosluklar kirpildi", changed))
 
     def remove_extra_spaces(self, col: str) -> None:
-        """Collapse multiple spaces into one."""
+        """Birden fazla bosluklari teke indir."""
         if col not in self.df.columns:
             return
         series = self.df[col].copy()
@@ -214,13 +222,14 @@ class CleaningEngine:
         self.df.loc[series.isna(), col] = np.nan
         changed = int((series.fillna("") != self.df[col].fillna("")).sum())
         if changed > 0:
-            self.log.append(CleaningAction(col, "Text Cleaning", "Removed extra spaces", changed))
+            self.log.append(CleaningAction(col, "Metin Temizleme", "Fazla bosluklar silindi", changed))
 
     def change_case(self, col: str, case: str) -> None:
-        """Change text case: 'lower', 'upper', 'title'."""
+        """Metin harflerini degistir: 'lower', 'upper', 'title'."""
         if col not in self.df.columns:
             return
         series = self.df[col].copy()
+        case_labels = {"lower": "Kucuk harfe cevirildi", "upper": "Buyuk harfe cevirildi", "title": "Baslik formatina cevirildi"}
         if case == "lower":
             self.df[col] = self.df[col].astype(str).str.lower()
         elif case == "upper":
@@ -230,10 +239,10 @@ class CleaningEngine:
         self.df.loc[series.isna(), col] = np.nan
         changed = int((series.fillna("") != self.df[col].fillna("")).sum())
         if changed > 0:
-            self.log.append(CleaningAction(col, "Text Cleaning", f"Changed to {case}case", changed))
+            self.log.append(CleaningAction(col, "Metin Temizleme", case_labels.get(case, case), changed))
 
     def remove_punctuation(self, col: str) -> None:
-        """Remove punctuation characters from text."""
+        """Noktalama isaretlerini kaldir."""
         if col not in self.df.columns:
             return
         series = self.df[col].copy()
@@ -241,10 +250,10 @@ class CleaningEngine:
         self.df.loc[series.isna(), col] = np.nan
         changed = int((series.fillna("") != self.df[col].fillna("")).sum())
         if changed > 0:
-            self.log.append(CleaningAction(col, "Text Cleaning", "Removed punctuation", changed))
+            self.log.append(CleaningAction(col, "Metin Temizleme", "Noktalama isaretleri silindi", changed))
 
     def replace_placeholders(self, col: str) -> None:
-        """Replace common placeholder values with NaN."""
+        """Yaygin yer tutucu degerleri NaN ile degistir."""
         if col not in self.df.columns:
             return
         placeholders = {"n/a", "na", "N/A", "NA", "-", "--", "null", "NULL",
@@ -254,10 +263,10 @@ class CleaningEngine:
         count = int(mask.sum())
         if count > 0:
             self.df.loc[mask, col] = np.nan
-            self.log.append(CleaningAction(col, "Invalid Values", "Replaced placeholders with NaN", count))
+            self.log.append(CleaningAction(col, "Gecersiz Deger", "Yer tutucular NaN ile degistirildi", count))
 
     def cap_outliers(self, col: str, method: str = "iqr") -> None:
-        """Cap outliers using IQR method or winsorization."""
+        """IQR veya winsorlama yontemiyle aykiri degerleri sinirla."""
         if col not in self.df.columns:
             return
         series = self.df[col].dropna()
@@ -278,36 +287,36 @@ class CleaningEngine:
         count = int(outlier_mask.sum())
         if count > 0:
             self.df[col] = self.df[col].clip(lower=lower, upper=upper)
-            method_label = "IQR capping" if method == "iqr" else "Winsorization"
-            self.log.append(CleaningAction(col, "Outlier", method_label, count))
+            method_label = "IQR sinirlama" if method == "iqr" else "Winsorlama"
+            self.log.append(CleaningAction(col, "Aykiri Deger", method_label, count))
 
     def drop_high_missing_columns(self, threshold: float = 0.8) -> None:
-        """Drop columns where missing ratio exceeds threshold."""
+        """Eksiklik orani esigi asan kolonlari sil."""
         for col in list(self.df.columns):
             ratio = self.df[col].isnull().sum() / len(self.df)
             if ratio >= threshold:
                 self.df = self.df.drop(columns=[col])
-                self.log.append(CleaningAction(col, "High Missing Rate", f"Dropped column (>{threshold*100:.0f}% missing)", len(self.df)))
+                self.log.append(CleaningAction(col, "Yuksek Eksiklik Orani", f"Kolon silindi (>{threshold*100:.0f}% eksik)", len(self.df)))
 
-    # ── Summary & Export ─────────────────────────────────────────────
+    # ── Ozet ve Disari Aktarma ───────────────────────────────────────
 
     def get_summary_df(self) -> pd.DataFrame:
-        """Return the cleaning log as a DataFrame."""
+        """Temizleme logunu DataFrame olarak dondur."""
         if not self.log:
-            return pd.DataFrame(columns=["Column", "Issue Type", "Action", "Affected Rows", "Status"])
+            return pd.DataFrame(columns=["Kolon", "Sorun Tipi", "Uygulanan Islem", "Etkilenen Satir", "Durum"])
         return pd.DataFrame([
             {
-                "Column": a.column,
-                "Issue Type": a.issue_type,
-                "Action": a.action,
-                "Affected Rows": a.affected_rows,
-                "Status": a.status,
+                "Kolon": a.column,
+                "Sorun Tipi": a.issue_type,
+                "Uygulanan Islem": a.action,
+                "Etkilenen Satir": a.affected_rows,
+                "Durum": a.status,
             }
             for a in self.log
         ])
 
     def get_metrics(self) -> dict[str, Any]:
-        """Return before/after metrics."""
+        """Oncesi/sonrasi metriklerini dondur."""
         return {
             "rows_before": self.original_row_count,
             "rows_after": len(self.df),
